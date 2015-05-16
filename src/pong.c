@@ -7,13 +7,27 @@
 #include "pong.h"
 #include "assets.h"
 #include "config.h"
+#include "paddles.h"
 
 #include <SDL.h>
+#include <stdlib.h>
+#include <math.h>
 #include <string.h>
 
 #define DEFAULT_BUF_SIZE 16
 #define FONT_SIZE 16
 #define KEYMAP_MAX SDL_SCANCODE_SLEEP
+
+#define BALL_SPEED 1
+#define BALL_DEFAULT_DIR 0 //up and left
+#define BALL_DIR_DOWN_MASK 0x1
+#define BALL_DIR_RIGHT_MASK 0x2
+#define BALL_DIR_DOWN(D) (D & BALL_DIR_DOWN_MASK)
+#define BALL_DIR_RIGHT(D) (D & BALL_DIR_RIGHT_MASK)
+
+#define BALL_WALL_BUFFER (WALL_THICKNESS + BALL_SIZE / 2)
+
+#define BALL_INSIDE_PADDLE(P, B) ((B.x > P.x - ))
 
 typedef struct {
     SDL_Renderer *renderer;
@@ -24,7 +38,13 @@ typedef struct {
     SDL_Point player1;
     SDL_Point player2;
     SDL_Point ball;
+    int ballDir;
 } Pong;
+
+typedef struct {
+    double x;
+    double y;
+} PointF;
 
 /**
  * Src position for the ball in the sprite sheet
@@ -37,22 +57,12 @@ const SDL_Rect ballSrc = {
 };
 
 /**
- * Src position for the left paddle in the sprite sheet
+ * Src position for the paddle in the sprite sheet
  */
-const SDL_Rect leftPaddleSrc = {
+const SDL_Rect paddleSrc = {
     .x = 0,
     .y = 32,
-    .w = 32,
-    .h = 64
-};
-
-/**
- * Src position for the right paddle in the sprite sheet
- */
-const SDL_Rect rightPaddleSrc = {
-    .x = 0,
-    .y = 96,
-    .w = 32,
+    .w = 16,
     .h = 64
 };
 
@@ -60,6 +70,85 @@ const SDL_Rect rightPaddleSrc = {
  * Keymap for keypresses
  */
 static uint8_t keymap[KEYMAP_MAX];
+
+/**
+ * Computes the 2-D cross product
+ * @param  a Point a
+ * @param  b Point b
+ * @return   Cross product
+ */
+static double point_cross(const PointF *a, const PointF *b)
+{
+    return a->x * b->y + a->y * b->x;
+}
+
+/**
+ * Subtracts two points
+ * @param  a Point a
+ * @param  b Point b
+ * @return   Difference between the points
+ */
+static PointF point_subtract(const PointF *a, const PointF *b)
+{
+    PointF p;
+
+    p.x = a->x + b->x;
+    p.y = a->y + b->y;
+
+    return p;
+}
+
+/**
+ * Computes the dot product of two points
+ * @param  a Point a
+ * @param  b Point b
+ * @return   Dot product
+ */
+static double point_dot(const PointF *a, const PointF *b)
+{
+    return a->x * b->x + a->y * b->y;
+}
+
+/**
+ * Determinse whether or not the lines p+r and q+s intersect
+ * @param  p Point p
+ * @param  q Point q
+ * @param  r Point r
+ * @param  s Point s
+ * @return   Nonzero if the lines intersect
+ */
+static int line_intersect(const PointF *p, const PointF *q, const PointF *r, const PointF *s)
+{
+    //derived from http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+    double rs = point_cross(r, s);
+    PointF qnp = point_subtract(q, p);
+    PointF pnq = point_subtract(p, q);
+
+    if (rs != 0)
+    {
+        double qnps = point_cross(&qnp, s);
+        double t = qnps / rs;
+        double pnqr = point_cross(&pnq, r);
+        double u = pnqr / rs;
+
+        return t > 0 && t < 1 && u > 0 && u < 1;
+    }
+    else
+    {
+        double qnpr = point_cross(&qnp, r);
+        if (qnpr == 0)
+        {
+            double qnpdr = point_dot(&qnp, r);
+            double rdr = point_dot(r, r);
+            double t0  = qnpdr / rdr;
+            double sdr = point_dot(s, r);
+            double t1  = t0 + sdr / rdr;
+            return fabs(t0 - t1) < 1.0;
+        }
+    }
+
+    return 0; //no intersection here
+}
 
 /**
  * Handles events from SDL
@@ -128,10 +217,43 @@ static void draw_string(Pong *game, const char* str, int x, int y)
     }
 }
 
+static void pong_tick(Pong *game)
+{
+    //move the paddles
+    paddle_left_tick(keymap, &game->player1);
+    paddle_right_tick(keymap, &game->player2);
+
+    //move the ball
+    PointF p = {
+        .x = game->ball.x,
+        .y = game->ball.y
+    };
+    PointF r = {
+        .x = BALL_SPEED * (BALL_DIR_RIGHT(game->ballDir) ? 1 : -1),
+        .y = BALL_SPEED * (BALL_DIR_DOWN(game->ballDir) ? 1 : -1)
+    };
+
+    //perform ball collision testing
+    if (game->ball.y <= BALL_WALL_BUFFER || game->ball.y >= (WINDOW_HEIGHT - BALL_WALL_BUFFER))
+    {
+        game->ballDir ^= BALL_DIR_DOWN_MASK;
+    }
+
+    //perform ball scoring
+
+    //move the ball
+    game->ball.x += r.x;
+    game->ball.y += r.y;
+}
+
 static void pong_render(Pong *game)
 {
     SDL_Rect rect, src, dest;
     char buf[DEFAULT_BUF_SIZE];
+
+    //clear the target
+    SDL_SetRenderDrawColor(game->renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(game->renderer);
 
     //render the ball
     src = ballSrc;
@@ -142,13 +264,12 @@ static void pong_render(Pong *game)
     SDL_RenderCopy(game->renderer, game->sprites, &src, &dest);
 
     //render the players
-    src = leftPaddleSrc;
+    src = paddleSrc;
     dest.x = game->player1.x - 16;
     dest.y = game->player1.y - PADDLE_HEIGHT / 2;
     dest.w = 16;
     dest.h = PADDLE_HEIGHT;
     SDL_RenderCopy(game->renderer, game->sprites, &src, &dest);
-    src = rightPaddleSrc;
     dest.x = game->player2.x;
     dest.y = game->player2.y - PADDLE_HEIGHT / 2;
     dest.w = 16;
@@ -238,6 +359,7 @@ void pong_main(void)
     game.player2Score = 0;
     game.ball.x = WINDOW_WIDTH / 2;
     game.ball.y = WINDOW_HEIGHT / 2;
+    game.ballDir = BALL_DEFAULT_DIR;
     game.player1.x = PADDLE1_XPOS;
     game.player1.y = WINDOW_HEIGHT / 2;
     game.player2.x = PADDLE2_XPOS;
@@ -250,6 +372,9 @@ void pong_main(void)
         {
             break;
         }
+
+        //perform the game logic
+        pong_tick(&game);
 
         //render the game
         pong_render(&game);

@@ -13,5 +13,7 @@
 
 extern uint8_t assets_font[];
 extern int assets_font_size;
+extern uint8_t assets_sprites[];
+extern int assets_sprites_size;
 
 #endif //_ASSETS_H_

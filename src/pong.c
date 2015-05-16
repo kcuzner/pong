@@ -6,6 +6,7 @@
 
 #include "pong.h"
 #include "assets.h"
+#include "config.h"
 
 #include <SDL.h>
 #include <string.h>
@@ -17,12 +18,43 @@
 typedef struct {
     SDL_Renderer *renderer;
     SDL_Texture *font;
+    SDL_Texture *sprites;
     int player1Score;
     int player2Score;
     SDL_Point player1;
     SDL_Point player2;
     SDL_Point ball;
 } Pong;
+
+/**
+ * Src position for the ball in the sprite sheet
+ */
+const SDL_Rect ballSrc = {
+    .x = 0,
+    .y = 0,
+    .w = 32,
+    .h = 32
+};
+
+/**
+ * Src position for the left paddle in the sprite sheet
+ */
+const SDL_Rect leftPaddleSrc = {
+    .x = 0,
+    .y = 32,
+    .w = 32,
+    .h = 64
+};
+
+/**
+ * Src position for the right paddle in the sprite sheet
+ */
+const SDL_Rect rightPaddleSrc = {
+    .x = 0,
+    .y = 96,
+    .w = 32,
+    .h = 64
+};
 
 /**
  * Keymap for keypresses
@@ -98,31 +130,49 @@ static void draw_string(Pong *game, const char* str, int x, int y)
 
 static void pong_render(Pong *game)
 {
-    SDL_Rect rect;
+    SDL_Rect rect, src, dest;
     char buf[DEFAULT_BUF_SIZE];
 
     //render the ball
+    src = ballSrc;
+    dest.x = game->ball.x - BALL_SIZE / 2;
+    dest.y = game->ball.y - BALL_SIZE / 2;
+    dest.w = BALL_SIZE;
+    dest.h = BALL_SIZE;
+    SDL_RenderCopy(game->renderer, game->sprites, &src, &dest);
 
     //render the players
+    src = leftPaddleSrc;
+    dest.x = game->player1.x - 16;
+    dest.y = game->player1.y - PADDLE_HEIGHT / 2;
+    dest.w = 16;
+    dest.h = PADDLE_HEIGHT;
+    SDL_RenderCopy(game->renderer, game->sprites, &src, &dest);
+    src = rightPaddleSrc;
+    dest.x = game->player2.x;
+    dest.y = game->player2.y - PADDLE_HEIGHT / 2;
+    dest.w = 16;
+    dest.h = PADDLE_HEIGHT;
+    SDL_RenderCopy(game->renderer, game->sprites, &src, &dest);
 
     //render the walls
     SDL_SetRenderDrawColor(game->renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
     rect.x = 0;
     rect.y = 0;
-    rect.w = 480;
-    rect.h = 16;
+    rect.w = WINDOW_WIDTH;
+    rect.h = WALL_THICKNESS;
     SDL_RenderFillRect(game->renderer, &rect);
     rect.x = 0;
-    rect.y = 480 - 16;
-    rect.w = 480;
-    rect.h = 16;
+    rect.y = WINDOW_HEIGHT - WALL_THICKNESS;
+    rect.w = WINDOW_WIDTH;
+    rect.h = WALL_THICKNESS;
     SDL_RenderFillRect(game->renderer, &rect);
 
     //render the scores
     snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player1Score);
-    draw_string(game, buf, 32, 64);
+    draw_string(game, buf, PADDLE1_XPOS, 64);
     snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player2Score);
-    draw_string(game, buf, 480 - 48, 64);
+    draw_string(game, buf,PADDLE2_XPOS - 32, 64);
 
     //finish rendering this frame
     SDL_RenderPresent(game->renderer);
@@ -141,7 +191,7 @@ void pong_main(void)
     }
 
     //create the window
-    window = SDL_CreateWindow("Pong", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 480, 480, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Pong", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!window)
     {
         fprintf(stderr, "SDL could not create window: %s\n", SDL_GetError());
@@ -167,8 +217,33 @@ void pong_main(void)
     }
     SDL_FreeSurface(font);
 
+    //create the sprites texture
+    s = SDL_RWFromMem(assets_sprites, assets_sprites_size);
+    if (!s)
+    {
+        fprintf(stderr, "Unable to load sprite data: %s\n", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
+    SDL_Surface *sprites = SDL_LoadBMP_RW(s, 1); //we close the stream automatically
+    game.sprites = SDL_CreateTextureFromSurface(game.renderer, sprites);
+    if (!game.sprites)
+    {
+        fprintf(stderr, "Unable to create sprites texture: %s\n", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
+    SDL_FreeSurface(sprites);
+
+    //initial game settings
     game.player1Score = 0;
     game.player2Score = 0;
+    game.ball.x = WINDOW_WIDTH / 2;
+    game.ball.y = WINDOW_HEIGHT / 2;
+    game.player1.x = PADDLE1_XPOS;
+    game.player1.y = WINDOW_HEIGHT / 2;
+    game.player2.x = PADDLE2_XPOS;
+    game.player2.y = WINDOW_HEIGHT / 2;
+
+    //main game loop
     while(1)
     {
         if (!handle_events())

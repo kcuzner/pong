@@ -19,6 +19,9 @@ typedef struct {
     SDL_Texture *font;
     int player1Score;
     int player2Score;
+    SDL_Point player1;
+    SDL_Point player2;
+    SDL_Point ball;
 } Pong;
 
 /**
@@ -95,11 +98,25 @@ static void draw_string(Pong *game, const char* str, int x, int y)
 
 static void pong_render(Pong *game)
 {
+    SDL_Rect rect;
     char buf[DEFAULT_BUF_SIZE];
 
     //render the ball
 
     //render the players
+
+    //render the walls
+    SDL_SetRenderDrawColor(game->renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
+    rect.x = 0;
+    rect.y = 0;
+    rect.w = 480;
+    rect.h = 16;
+    SDL_RenderFillRect(game->renderer, &rect);
+    rect.x = 0;
+    rect.y = 480 - 16;
+    rect.w = 480;
+    rect.h = 16;
+    SDL_RenderFillRect(game->renderer, &rect);
 
     //render the scores
     snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player1Score);
@@ -107,6 +124,7 @@ static void pong_render(Pong *game)
     snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player2Score);
     draw_string(game, buf, 480 - 48, 64);
 
+    //finish rendering this frame
     SDL_RenderPresent(game->renderer);
 }
 

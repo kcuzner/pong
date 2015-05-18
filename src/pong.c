@@ -35,16 +35,11 @@ typedef struct {
     SDL_Texture *sprites;
     int player1Score;
     int player2Score;
-    SDL_Point player1;
-    SDL_Point player2;
+    SDL_Rect player1;
+    SDL_Rect player2;
     SDL_Point ball;
     int ballDir;
 } Pong;
-
-typedef struct {
-    double x;
-    double y;
-} PointF;
 
 /**
  * Src position for the ball in the sprite sheet
@@ -57,98 +52,9 @@ const SDL_Rect ballSrc = {
 };
 
 /**
- * Src position for the paddle in the sprite sheet
- */
-const SDL_Rect paddleSrc = {
-    .x = 0,
-    .y = 32,
-    .w = 16,
-    .h = 64
-};
-
-/**
  * Keymap for keypresses
  */
 static uint8_t keymap[KEYMAP_MAX];
-
-/**
- * Computes the 2-D cross product
- * @param  a Point a
- * @param  b Point b
- * @return   Cross product
- */
-static double point_cross(const PointF *a, const PointF *b)
-{
-    return a->x * b->y + a->y * b->x;
-}
-
-/**
- * Subtracts two points
- * @param  a Point a
- * @param  b Point b
- * @return   Difference between the points
- */
-static PointF point_subtract(const PointF *a, const PointF *b)
-{
-    PointF p;
-
-    p.x = a->x + b->x;
-    p.y = a->y + b->y;
-
-    return p;
-}
-
-/**
- * Computes the dot product of two points
- * @param  a Point a
- * @param  b Point b
- * @return   Dot product
- */
-static double point_dot(const PointF *a, const PointF *b)
-{
-    return a->x * b->x + a->y * b->y;
-}
-
-/**
- * Determinse whether or not the lines p+r and q+s intersect
- * @param  p Point p
- * @param  q Point q
- * @param  r Point r
- * @param  s Point s
- * @return   Nonzero if the lines intersect
- */
-static int line_intersect(const PointF *p, const PointF *q, const PointF *r, const PointF *s)
-{
-    //derived from http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
-    double rs = point_cross(r, s);
-    PointF qnp = point_subtract(q, p);
-    PointF pnq = point_subtract(p, q);
-
-    if (rs != 0)
-    {
-        double qnps = point_cross(&qnp, s);
-        double t = qnps / rs;
-        double pnqr = point_cross(&pnq, r);
-        double u = pnqr / rs;
-
-        return t > 0 && t < 1 && u > 0 && u < 1;
-    }
-    else
-    {
-        double qnpr = point_cross(&qnp, r);
-        if (qnpr == 0)
-        {
-            double qnpdr = point_dot(&qnp, r);
-            double rdr = point_dot(r, r);
-            double t0  = qnpdr / rdr;
-            double sdr = point_dot(s, r);
-            double t1  = t0 + sdr / rdr;
-            return fabs(t0 - t1) < 1.0;
-        }
-    }
-
-    return 0; //no intersection here
-}
 
 /**
  * Handles events from SDL
@@ -224,11 +130,11 @@ static void pong_tick(Pong *game)
     paddle_right_tick(keymap, &game->player2);
 
     //move the ball
-    PointF p = {
+    SDL_Point q = {
         .x = game->ball.x,
         .y = game->ball.y
-    };
-    PointF r = {
+    }
+    SDL_Point r = {
         .x = BALL_SPEED * (BALL_DIR_RIGHT(game->ballDir) ? 1 : -1),
         .y = BALL_SPEED * (BALL_DIR_DOWN(game->ballDir) ? 1 : -1)
     };
@@ -264,17 +170,9 @@ static void pong_render(Pong *game)
     SDL_RenderCopy(game->renderer, game->sprites, &src, &dest);
 
     //render the players
-    src = paddleSrc;
-    dest.x = game->player1.x - 16;
-    dest.y = game->player1.y - PADDLE_HEIGHT / 2;
-    dest.w = 16;
-    dest.h = PADDLE_HEIGHT;
-    SDL_RenderCopy(game->renderer, game->sprites, &src, &dest);
-    dest.x = game->player2.x;
-    dest.y = game->player2.y - PADDLE_HEIGHT / 2;
-    dest.w = 16;
-    dest.h = PADDLE_HEIGHT;
-    SDL_RenderCopy(game->renderer, game->sprites, &src, &dest);
+    SDL_SetRenderDrawColor(game->renderer, 0xFF, 0xFF ,0xFF, SDL_ALPHA_OPAQUE);
+    SDL_RenderFillRect(game->renderer, game->player1);
+    SDL_RenderFillRect(game->renderer, game->player2);
 
     //render the walls
     SDL_SetRenderDrawColor(game->renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);

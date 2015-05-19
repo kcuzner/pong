@@ -130,10 +130,6 @@ static void pong_tick(Pong *game)
     paddle_right_tick(keymap, &game->player2);
 
     //move the ball
-    SDL_Point q = {
-        .x = game->ball.x,
-        .y = game->ball.y
-    }
     SDL_Point r = {
         .x = BALL_SPEED * (BALL_DIR_RIGHT(game->ballDir) ? 1 : -1),
         .y = BALL_SPEED * (BALL_DIR_DOWN(game->ballDir) ? 1 : -1)
@@ -142,12 +138,30 @@ static void pong_tick(Pong *game)
     //perform ball collision testing
     if (game->ball.y <= BALL_WALL_BUFFER || game->ball.y >= (WINDOW_HEIGHT - BALL_WALL_BUFFER))
     {
+        //flip our y direction
         game->ballDir ^= BALL_DIR_DOWN_MASK;
+        r.y *= -1;
+    }
+    if (!BALL_DIR_RIGHT(game->ballDir) &&
+        game->ball.x > game->player1.x && (game->ball.x + r.x) <= game->player1.x &&
+        game->ball.y > game->player1.y && game->ball.y < (game->player1.y + game->player1.h))
+    {
+        //flip our x direction
+        game->ballDir ^= BALL_DIR_RIGHT_MASK;
+        r.x *= -1;
+    }
+    else if (BALL_DIR_RIGHT(game->ballDir) &&
+        game->ball.x < game->player2.x && (game->ball.x + r.x) >= game->player2.x &&
+        game->ball.y > game->player2.y && game->ball.y <= (game->player2.y + game->player2.h))
+    {
+        game->ballDir ^= BALL_DIR_RIGHT_MASK;
+        r.x *= -1;
     }
 
     //perform ball scoring
 
     //move the ball
+
     game->ball.x += r.x;
     game->ball.y += r.y;
 }
@@ -171,8 +185,8 @@ static void pong_render(Pong *game)
 
     //render the players
     SDL_SetRenderDrawColor(game->renderer, 0xFF, 0xFF ,0xFF, SDL_ALPHA_OPAQUE);
-    SDL_RenderFillRect(game->renderer, game->player1);
-    SDL_RenderFillRect(game->renderer, game->player2);
+    SDL_RenderFillRect(game->renderer, &game->player1);
+    SDL_RenderFillRect(game->renderer, &game->player2);
 
     //render the walls
     SDL_SetRenderDrawColor(game->renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
@@ -258,10 +272,7 @@ void pong_main(void)
     game.ball.x = WINDOW_WIDTH / 2;
     game.ball.y = WINDOW_HEIGHT / 2;
     game.ballDir = BALL_DEFAULT_DIR;
-    game.player1.x = PADDLE1_XPOS;
-    game.player1.y = WINDOW_HEIGHT / 2;
-    game.player2.x = PADDLE2_XPOS;
-    game.player2.y = WINDOW_HEIGHT / 2;
+    paddle_init(&game.player1, &game.player2);
 
     //main game loop
     while(1)

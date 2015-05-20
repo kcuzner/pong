@@ -143,7 +143,7 @@ static void pong_tick(Pong *game)
         r.y *= -1;
     }
     if (!BALL_DIR_RIGHT(game->ballDir) &&
-        game->ball.x > game->player1.x && (game->ball.x + r.x) <= game->player1.x &&
+        (game->ball.x - BALL_SIZE / 2) > game->player1.x && (game->ball.x + r.x - BALL_SIZE / 2) <= game->player1.x &&
         game->ball.y > game->player1.y && game->ball.y < (game->player1.y + game->player1.h))
     {
         //flip our x direction
@@ -151,7 +151,7 @@ static void pong_tick(Pong *game)
         r.x *= -1;
     }
     else if (BALL_DIR_RIGHT(game->ballDir) &&
-        game->ball.x < game->player2.x && (game->ball.x + r.x) >= game->player2.x &&
+        (game->ball.x + BALL_SIZE / 2) < game->player2.x && (game->ball.x + r.x + BALL_SIZE / 2) >= game->player2.x &&
         game->ball.y > game->player2.y && game->ball.y <= (game->player2.y + game->player2.h))
     {
         game->ballDir ^= BALL_DIR_RIGHT_MASK;
@@ -186,6 +186,12 @@ static void pong_render(Pong *game)
     SDL_SetRenderDrawColor(game->renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(game->renderer);
 
+    //render the scores
+    snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player1Score);
+    draw_string(game, buf, (WINDOW_WIDTH / 2) - 128, 64);
+    snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player2Score);
+    draw_string(game, buf, (WINDOW_WIDTH / 2) + 128, 64);
+
     //render the ball
     src = ballSrc;
     dest.x = game->ball.x - BALL_SIZE / 2;
@@ -211,12 +217,6 @@ static void pong_render(Pong *game)
     rect.w = WINDOW_WIDTH;
     rect.h = WALL_THICKNESS;
     SDL_RenderFillRect(game->renderer, &rect);
-
-    //render the scores
-    snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player1Score);
-    draw_string(game, buf, PADDLE1_XPOS, 64);
-    snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player2Score);
-    draw_string(game, buf,PADDLE2_XPOS - 32, 64);
 
     //finish rendering this frame
     SDL_RenderPresent(game->renderer);

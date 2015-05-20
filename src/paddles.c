@@ -29,7 +29,14 @@ void paddle_init(SDL_Rect *left, SDL_Rect *right)
  */
 void paddle_left_tick(const uint8_t keymap[], SDL_Rect *paddle)
 {
-
+    if (paddle->y > WALL_THICKNESS && keymap[SDL_SCANCODE_A])
+    {
+        paddle->y -= 2;
+    }
+    else if ((paddle->y + paddle->h) < (WINDOW_HEIGHT - WALL_THICKNESS) && keymap[SDL_SCANCODE_Z])
+    {
+        paddle->y += 2;
+    }
 }
 
 /**
@@ -39,5 +46,12 @@ void paddle_left_tick(const uint8_t keymap[], SDL_Rect *paddle)
  */
 void paddle_right_tick(const uint8_t keymap[], SDL_Rect *paddle)
 {
-
+    if (paddle->y > WALL_THICKNESS && keymap[SDL_SCANCODE_UP])
+    {
+        paddle->y -= 2;
+    }
+    else if ((paddle->y + paddle->h) < (WINDOW_HEIGHT - WALL_THICKNESS) && keymap[SDL_SCANCODE_DOWN])
+    {
+        paddle->y += 2;
+    }
 }

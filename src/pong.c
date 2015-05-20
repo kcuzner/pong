@@ -159,9 +159,20 @@ static void pong_tick(Pong *game)
     }
 
     //perform ball scoring
+    if (game->ball.x < 0)
+    {
+        game->player2Score++;
+        game->ball.x = WINDOW_WIDTH / 2;
+        game->ball.y = WINDOW_HEIGHT / 2;
+    }
+    else if (game->ball.x > WINDOW_WIDTH)
+    {
+        game->player1Score++;
+        game->ball.x = WINDOW_WIDTH / 2;
+        game->ball.y = WINDOW_HEIGHT / 2;
+    }
 
     //move the ball
-
     game->ball.x += r.x;
     game->ball.y += r.y;
 }

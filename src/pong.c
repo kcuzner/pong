@@ -181,6 +181,7 @@ static void pong_render(Pong *game)
 {
     SDL_Rect rect, src, dest;
     char buf[DEFAULT_BUF_SIZE];
+    int len;
 
     //clear the target
     SDL_SetRenderDrawColor(game->renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
@@ -188,7 +189,8 @@ static void pong_render(Pong *game)
 
     //render the scores
     snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player1Score);
-    draw_string(game, buf, (WINDOW_WIDTH / 2) - 128, 64);
+    len = strlen(buf);
+    draw_string(game, buf, (WINDOW_WIDTH / 2) - 128 - len * FONT_SIZE, 64);
     snprintf(buf, DEFAULT_BUF_SIZE, "%d", game->player2Score);
     draw_string(game, buf, (WINDOW_WIDTH / 2) + 128, 64);
 

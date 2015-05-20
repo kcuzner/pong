@@ -126,8 +126,8 @@ static void draw_string(Pong *game, const char* str, int x, int y)
 static void pong_tick(Pong *game)
 {
     //move the paddles
-    paddle_left_tick(keymap, &game->player1);
-    paddle_right_tick(keymap, &game->player2);
+    paddle_left_tick(&game->player1, keymap, &game->ball);
+    paddle_right_tick(&game->player2, keymap, &game->ball);
 
     //move the ball
     SDL_Point r = {

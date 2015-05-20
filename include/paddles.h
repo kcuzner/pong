@@ -21,16 +21,18 @@ void paddle_init(SDL_Rect *left, SDL_Rect *right);
 
 /**
  * Called to move the left paddle if needed
- * @param keymap Keymap with current keys
  * @param paddle Paddle to move
+ * @param keymap Keymap with current keys
+ * @param ball   Ball position
  */
-void paddle_left_tick(const uint8_t keymap[], SDL_Rect *paddle);
+void paddle_left_tick(SDL_Rect *paddle, const uint8_t keymap[], const SDL_Point *ball);
 
 /**
  * Called to move the right paddle if needed
- * @param keymap Keymap with current keys
  * @param paddle Paddle to move
+ * @param keymap Keymap with current keys
+ * @param ball   Ball position
  */
-void paddle_right_tick(const uint8_t keymap[], SDL_Rect *paddle);
+void paddle_right_tick(SDL_Rect *paddle, const uint8_t keymap[], const SDL_Point *ball);
 
 #endif //_PADDLES_H_

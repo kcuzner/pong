@@ -29,7 +29,6 @@ make
 
  * [CMake](http://www.cmake.org/files/v3.2/cmake-3.2.2-win32-x86.exe)
  * [CodeBlocks with MinGW](http://sourceforge.net/projects/codeblocks/files/Binaries/13.12/Windows/codeblocks-13.12mingw-setup.exe)
- * [MinGW Installer](https://sourceforge.net/projects/mingw/files/latest/download)
 
 Instructions:
 

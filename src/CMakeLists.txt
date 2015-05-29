@@ -25,7 +25,7 @@ set(SOURCES main.c paddles.c pong.c assets.S)
 add_executable(pong ${SOURCES})
 add_custom_command(TARGET pong POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${PROJECT_SOURCE_DIR}/sdl-mingw/bin/SDL.dll"
+    "${PROJECT_SOURCE_DIR}/sdl-mingw/bin/SDL2.dll"
     $<TARGET_FILE_DIR:pong>)
 
 target_link_libraries(pong ${SDL_PKG_LIBRARIES})

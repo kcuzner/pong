@@ -1,5 +1,4 @@
 enable_language(ASM)
-
 include_directories(../include)
 
 # Add libraries for linux
@@ -14,12 +13,21 @@ if(UNIX)
 endif()
 
 # Add libraries for windows
+if(WIN32)
+    include_directories(../sdl-mingw/include/SDL2)
+    find_library(SDL_PKG_LIBRARIES SDL2 ${CMAKE_SOURCE_DIR}/sdl-mingw/lib)
+    add_definitions( -D__WIN32__ )
+endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-long-long")
 
-file(GLOB SOURCES *.c *.S)
+set(SOURCES main.c paddles.c pong.c assets.S)
 add_executable(pong ${SOURCES})
+add_custom_command(TARGET pong POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${PROJECT_SOURCE_DIR}/sdl-mingw/bin/SDL.dll"
+    $<TARGET_FILE_DIR:pong>)
 
-target_link_libraries(pong ${LIBS})
+target_link_libraries(pong ${SDL_PKG_LIBRARIES})
 
 install(TARGETS pong DESTINATION bin)

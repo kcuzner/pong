@@ -33,18 +33,15 @@ make
 
 Instructions:
 
- 1. Open MinGW Installation Manager
- 2. Navigate to All Packages -> MinGW -> MinGW Libraries
- 3. Check the boxes next to mingw32-libz dev and dll
- 4. Go to Installation -> Apply
- 5. Close MinGW Installation Manager
- 6. Open cmake-gui
- 7. Point the source path towards this project's directory
- 8. Point the build path towards this project's directory/build
- 9. Click configure. Select CodeBlocks - MinGW Makefiles
- 10. Click generate when configure has finished.
- 11. Open Code::Blocks
- 12. Navigate to this project's directory/build and open the cbp file
- 13. Click build
+ 1. Open cmake-gui
+ 2. Point the source path towards this project's directory
+ 3. Point the build path towards this project's directory/build
+ 4. Click configure. Select CodeBlocks - MinGW Makefiles
+ 5. Click generate when configure has finished.
+ 6. Open Code::Blocks
+ 7. Navigate to this project's directory/build and open the cbp file
+ 8. In the toolbar, select the 'pong' target (default is 'all')...it's a
+    dropdown menu.
+ 9. Click the build-and-run button (F9)
 
 

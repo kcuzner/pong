@@ -29,14 +29,13 @@ void paddle_init(SDL_Rect *left, SDL_Rect *right)
  */
 void paddle_left_tick(SDL_Rect *paddle, const uint8_t keymap[], const SDL_Point *ball)
 {
-    if (paddle->y > WALL_THICKNESS && keymap[SDL_SCANCODE_A])
-    {
-        paddle->y -= 2;
-    }
-    else if ((paddle->y + paddle->h) < (WINDOW_HEIGHT - WALL_THICKNESS) && keymap[SDL_SCANCODE_Z])
-    {
-        paddle->y += 2;
-    }
+    //Variables:
+    //keymap[SDL_SCANCODE_UP]           Whether or not the up key is pressed
+    //keymap[SDL_SCANCODE_DOWN]         Whether or not the down key is pressed
+    //paddle->y                         The "Y" position of the paddle
+    //WALL_THICKNESS                    Thickness of the walls on the top and bottom
+    //WINDOW_HEIGHT                     Height of the pong window
+
 }
 
 /**
@@ -46,7 +45,6 @@ void paddle_left_tick(SDL_Rect *paddle, const uint8_t keymap[], const SDL_Point 
  */
 void paddle_right_tick(SDL_Rect *paddle, const uint8_t keymap[], const SDL_Point *ball)
 {
-#ifdef PLAYER2_AI
     //an ai is playing the game
     if (paddle->y > WALL_THICKNESS && ball->y < (paddle->y + paddle->h / 2))
     {
@@ -56,14 +54,4 @@ void paddle_right_tick(SDL_Rect *paddle, const uint8_t keymap[], const SDL_Point
     {
         paddle->y += 2;
     }
-#else
-    if (paddle->y > WALL_THICKNESS && keymap[SDL_SCANCODE_UP])
-    {
-        paddle->y -= 2;
-    }
-    else if ((paddle->y + paddle->h) < (WINDOW_HEIGHT - WALL_THICKNESS) && keymap[SDL_SCANCODE_DOWN])
-    {
-        paddle->y += 2;
-    }
-#endif
 }

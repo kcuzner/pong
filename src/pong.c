@@ -19,7 +19,7 @@
 #define FONT_SIZE 16
 #define KEYMAP_MAX SDL_SCANCODE_SLEEP
 
-#define BALL_SPEED 1
+#define BALL_SPEED 2
 #define BALL_DEFAULT_DIR 0 //up and left
 #define BALL_DIR_DOWN_MASK 0x1
 #define BALL_DIR_RIGHT_MASK 0x2
